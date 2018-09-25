@@ -2,10 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 
-
-df = pd.read_csv('data.csv', header=None)
-y_ori = df.values
-min_max_scalar = preprocessing.MinMaxScaler()
-y = min_max_scalar.fit_transform(y_ori)*2-1
-print(y)
-#z_sample = tf.add(mu, tf.multiply(epsilon, sigma))
+x = [{'x_i': 1}, {'x_i': 2}, {'x_i': 3}, {'x_i': 4}]
+print(x[0:2])
+for item in x[0:2]:
+    print(item['x_i'])
