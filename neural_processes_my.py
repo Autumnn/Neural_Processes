@@ -20,13 +20,13 @@ class NeuralProcess:
 
     def map_xy_to_z_params(self, x, y):
         inp = tf.concat([x, y], axis=1)
-        t_x = tf.layers.dense(inp, self.dim_h_hidden, tf.nn.sigmoid, name='encoder_layer_1', reuse=tf.AUTO_REUSE)
-        t_x = tf.layers.dense(t_x, self.dim_r, name="encoder_layer_2", reuse=tf.AUTO_REUSE)
-        r = tf.reduce_mean(t_x, axis=0)
-        r = tf.reshape(r, shape=(1, -1))   ######################
+        t_x_1 = tf.layers.dense(inp, self.dim_h_hidden, tf.nn.sigmoid, name='encoder_layer_1', reuse=tf.AUTO_REUSE)
+        t_x = tf.layers.dense(t_x_1, self.dim_r, name="encoder_layer_2", reuse=tf.AUTO_REUSE)
+        r_1 = tf.reduce_mean(t_x, axis=0)
+        r = tf.reshape(r_1, shape=(1, -1))   ######################
         mu = tf.layers.dense(r, self.dim_z, name='z_params_mu', reuse=tf.AUTO_REUSE)
-        sigma = tf.layers.dense(r, self.dim_z, name='z_params_sigma', reuse=tf.AUTO_REUSE)
-        sigma = tf.nn.softplus(sigma)
+        sigma_t = tf.layers.dense(r, self.dim_z, name='z_params_sigma', reuse=tf.AUTO_REUSE)
+        sigma = tf.nn.softplus(sigma_t)
 
         #size = tf.shape(t_x)
 
@@ -51,15 +51,13 @@ class NeuralProcess:
 
         hidden = tf.layers.dense(inp, self.dim_g_hidden, tf.nn.sigmoid, name="decoder_layer_1", reuse=tf.AUTO_REUSE)
 
-        mu_star = tf.layers.dense(hidden, 1, name="decoder_layer_2", reuse=tf.AUTO_REUSE)
+        y_star = tf.layers.dense(hidden, 1, name="decoder_layer_2", reuse=tf.AUTO_REUSE)
         #size = tf.shape(mu_star)
-        mu_star = tf.squeeze(mu_star, axis=2)
-        mu_star = tf.transpose(mu_star)         # dim = [N_star, n_draws]
-
-        sigma_star = tf.constant(noise_sd, dtype=tf.float32)
+        y_star = tf.squeeze(y_star, axis=2)
+        y_star = tf.transpose(y_star)         # dim = [N_star, n_draws]
 
         #return {'mu': mu_star, 'sigma': sigma_star, 'size': size}
-        return {'mu': mu_star, 'sigma': sigma_star}
+        return {'y_star': y_star}
 
     def klqp_gaussian(self, mu_q, sigma_q, mu_p, sigma_p):
         sigma2_q = tf.square(sigma_q) + 1e-16
@@ -69,10 +67,12 @@ class NeuralProcess:
         return temp
 
     def custom_objective(self, y_pred_params, z_all, z_context):
-        p_normal = tf.distributions.Normal(loc= y_pred_params['mu'], scale= y_pred_params['sigma'])
-        p_star = p_normal.log_prob(self.y_target)
-        p_star = tf.reduce_sum(p_star, axis=0)
-        loglik = tf.reduce_mean(p_star)
+        y_star_para = y_pred_params['y_star']     # dim = [N_star, n_draws]
+        mu, sigma = tf.nn.moments(y_star_para, axes=[1])    # dim = N_star
+        sdv = tf.sqrt(sigma)
+        p_normal = tf.distributions.Normal(loc=mu, scale=sdv)
+        p_star = p_normal.log_prob(tf.transpose(self.y_target))
+        loglik = tf.reduce_sum(p_star)
         KL_loss = self.klqp_gaussian(z_all['mu'], z_all['sigma'], z_context['mu'], z_context['sigma'])
         loss = tf.negative(loglik) + KL_loss
         return loss

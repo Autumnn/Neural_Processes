@@ -4,6 +4,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from neural_processes import NeuralProcess
+#from neural_processes_my import NeuralProcess
 
 N = 5
 #x = np.linspace(-4, 4, 17)
@@ -37,12 +38,13 @@ init = tf.global_variables_initializer()
 sess.run(init)
 
 n_iter = 5000
-plot_freq = 10
+plot_freq = 200
 
-n_draws = 20
+n_draws = 50
 x_star_temp = np.linspace(-4, 4, 100)
 x_star = np.expand_dims(x_star_temp, axis=1)
-eps_value = np.random.normal(size=(n_draws, dim_r))
+eps_value = np.random.normal(size=(n_draws, dim_z))  #, loc=0, scale=10.0
+#eps_value = np.ones((n_draws, dim_r))  #, loc=0, scale=10.0
 epsilon = tf.constant(eps_value, dtype=tf.float32)
 predict_op = neural_process.posterior_predict(x, y, x_star, epsilon=epsilon, n_draws=n_draws)
 
@@ -55,8 +57,9 @@ for iter in range(n_iter):
     a = sess.run(train_op_and_loss, feed_dict= feed_dict)
 
     # plotting
-    if iter%plot_freq == 0:
+    if iter % plot_freq == 0:
         y_star_mat = sess.run(predict_op['mu'])         # 'Mu' --> dim = [N_star, n_draws] --> [100, 50]
+        #y_star_mat = sess.run(predict_op['y_star'])
         df_pred_list.append(y_star_mat)
         print(a[1])
         #see_shape = sess.run(predict_op['size'])
@@ -65,7 +68,8 @@ for iter in range(n_iter):
         plt.scatter(x, y, marker='o', color='r', label='1', s=10, alpha=1)
         n_draws = y_star_mat.shape[1]
         for ii in range(n_draws):
-            plt.plot(x_star, y_star_mat[:, ii], color='#539caf')
+            #np.random.shuffle(y_star_mat[:, ii])
+            plt.plot(x_star, y_star_mat[:, ii], color='#539caf', linewidth=0.3)
             plt.ylim((-2, 2))
             #print(y_star_mat[:,ii])
         fig_name = 'Figures/experiment_1_iter_' + str(iter) + '.png'

@@ -8,7 +8,7 @@ from neural_processes import NeuralProcess
 df = pd.read_csv('data.csv', header=None)
 y_ori = df.values
 nn = y_ori.shape[0]
-y_ori = y_ori[nn-20:,]
+y_ori = y_ori[nn-10:,]
 min_max_scalar = preprocessing.MinMaxScaler()
 y = min_max_scalar.fit_transform(y_ori)*2-1
 N = y.shape[0]
@@ -41,19 +41,19 @@ train_op_and_loss = neural_process.init_NP(learning_rate = 0.001)
 init = tf.global_variables_initializer()
 sess.run(init)
 
-n_iter = 100000
-plot_freq = 2000
+n_iter = 1000
+plot_freq = 20
 
-n_draws = 5
+n_draws = 50
 x_star_temp = np.linspace(1, N, N*10)
 x_star = np.expand_dims(x_star_temp, axis=1)
-eps_value = np.random.normal(size=(n_draws, dim_r))
+eps_value = np.random.normal(size=(n_draws, dim_r), loc=0, scale=10.0)
 epsilon = tf.constant(eps_value, dtype=tf.float32)
 predict_op = neural_process.posterior_predict(x, y, x_star, epsilon=epsilon, n_draws=n_draws)
 
 df_pred_list = []
 for iter in range(n_iter):
-    N_context = np.random.randint(2, N, 1)
+    N_context = np.random.randint(5, N, 1)
     # create feed_dict containing context and target sets
     feed_dict = neural_process.helper_context_and_target(x, y, N_context, x_context, y_context, x_target, y_target)
     # optimisation step
