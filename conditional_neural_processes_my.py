@@ -114,8 +114,8 @@ class NeuralProcess:
         y_params = self.g(r_params, x_star)
         y_star = tf.add(y_params['mu'], tf.matmul(y_params['sigma'], tf.transpose(epsilon)))
 
-        #return y_star, z_params_shape, z_params['size']
-        return y_star
+        return y_star, y_params['mu'], y_params['sigma']
+        #return y_star
 
 
     def helper_context_and_target(self, x, y, N_context, x_context, y_context, x_target, y_target):

@@ -38,8 +38,10 @@ class GPCurvesReader(object):
         # [B, y_size, num_total_points, num_total_points, x_size]
         norm = tf.square(diff[:, None, :, :, :] / l1[:, :, None, None, :])
 
-        norm = tf.reduce_sum(
-            norm, -1)  # [B, data_size, num_total_points, num_total_points]
+        norm = tf.reduce_sum(norm, -1)  # [B, data_size, num_total_points, num_total_points]
+                                        # [B, y_size, num_total_points, num_total_points]
+                                        # data_size = y_size --> dimension of output 'y'
+                                        # Repeat the 'kernal-(K)' y_size times
 
         # [B, y_size, num_total_points, num_total_points]
         kernel = tf.square(sigma_f)[:, :, None, None] * tf.exp(-0.5 * norm)
@@ -58,7 +60,7 @@ class GPCurvesReader(object):
           A `CNPRegressionDescription` namedtuple.
         """
         num_context = tf.random_uniform(
-            shape=[], minval=3, maxval=self._max_num_context, dtype=tf.int32)
+            shape=[], minval=3, maxval=self._max_num_context, dtype=tf.int32)       # a single value between [3, 10) let 4
 
         # If we are testing we want to have more targets and have them evenly
         # distributed in order to plot the function.
@@ -67,30 +69,27 @@ class GPCurvesReader(object):
             num_total_points = num_target
             x_values = tf.tile(
                 tf.expand_dims(tf.range(-2., 2., 1. / 100, dtype=tf.float32), axis=0),
-                [self._batch_size, 1])
-            x_values = tf.expand_dims(x_values, axis=-1)
+                [self._batch_size, 1])                      # dim = [batch_size, 400] = [64, 400]
+            x_values = tf.expand_dims(x_values, axis=-1)    # dim = [batch_size, 400, 1] = [64, 400, 1] --> add one dimension
         # During training the number of target points and their x-positions are
         # selected at random
         else:
             num_target = tf.random_uniform(
-                shape=(), minval=2, maxval=self._max_num_context, dtype=tf.int32)
-            num_total_points = num_context + num_target
+                shape=(), minval=2, maxval=self._max_num_context, dtype=tf.int32)       # a single value between [2, 10) let 3
+            num_total_points = num_context + num_target                                 # let 4+3 = 7
             x_values = tf.random_uniform(
-                [self._batch_size, num_total_points, self._x_size], -2, 2)
+                [self._batch_size, num_total_points, self._x_size], -2, 2)      # dim = [64, 7, 1] between (-2,2)
 
         # Set kernel parameters
-        l1 = (
-                tf.ones(shape=[self._batch_size, self._y_size, self._x_size]) *
-                self._l1_scale)
-        sigma_f = tf.ones(
-            shape=[self._batch_size, self._y_size]) * self._sigma_scale
+        l1 = (tf.ones(shape=[self._batch_size, self._y_size, self._x_size]) * self._l1_scale)   # dim = [64, 1, 1]
+        sigma_f = tf.ones(shape=[self._batch_size, self._y_size]) * self._sigma_scale           # dim = [64, 1]
 
         # Pass the x_values through the Gaussian kernel
         # [batch_size, y_size, num_total_points, num_total_points]
         kernel = self._gaussian_kernel(x_values, l1, sigma_f)
 
         # Calculate Cholesky, using double precision for better stability:
-        cholesky = tf.cast(tf.cholesky(tf.cast(kernel, tf.float64)), tf.float32)
+        cholesky = tf.cast(tf.cholesky(tf.cast(kernel, tf.float64)), tf.float32)        #tf.cast() --> type convertor to 'floar64'
 
         # Sample a curve
         # [batch_size, y_size, num_total_points, 1]
@@ -103,13 +102,13 @@ class GPCurvesReader(object):
 
         if self._testing:
             # Select the targets
-            target_x = x_values
-            target_y = y_values
+            target_x = x_values     # dim = [batch_size, num_total_points, x_size]
+            target_y = y_values     # dim = [batch_size, num_total_points, y_size]
 
             # Select the observations
             idx = tf.random_shuffle(tf.range(num_target))
-            context_x = tf.gather(x_values, idx[:num_context], axis=1)
-            context_y = tf.gather(y_values, idx[:num_context], axis=1)
+            context_x = tf.gather(x_values, idx[:num_context], axis=1)  # dim = [batch_size, num_context, x_size]
+            context_y = tf.gather(y_values, idx[:num_context], axis=1)  # dim = [batch_size, num_context, y_size]
 
         else:
             # Select the targets which will consist of the context points as well as
@@ -179,7 +178,7 @@ class DeterministicEncoder(object):
     hidden = tf.reshape(hidden, (batch_size, num_context_points, size))
 
     # Aggregator: take the mean over all points
-    representation = tf.reduce_mean(hidden, axis=1)
+    representation = tf.reduce_mean(hidden, axis=1) # dim =[batch_size, output_sizes[-1]=128]
 
     return representation
 
@@ -212,7 +211,7 @@ class DeterministicDecoder(object):
 
     # Concatenate the representation and the target_x
     representation = tf.tile(
-        tf.expand_dims(representation, axis=1), [1, num_total_points, 1])
+        tf.expand_dims(representation, axis=1), [1, num_total_points, 1])   # dim = [batch_size, num_total_points, output_sizes[-1]=128]
     input = tf.concat([representation, target_x], axis=-1)
 
     # Get the shapes of the input and reshape to parallelise across observations
@@ -234,7 +233,7 @@ class DeterministicDecoder(object):
     hidden = tf.reshape(hidden, (batch_size, num_total_points, -1))
 
     # Get the mean an the variance
-    mu, log_sigma = tf.split(hidden, 2, axis=-1)
+    mu, log_sigma = tf.split(hidden, 2, axis=-1)        # dim = [batch_size, num_total_points, 1]
 
     # Bound the variance
     sigma = 0.1 + 0.9 * tf.nn.softplus(log_sigma)

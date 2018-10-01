@@ -9,7 +9,7 @@ from neural_processes import NeuralProcess
 
 
 def rastrigin(x_1, x_2):
-    A = 6
+    A = 3
     return -(A + ((x_1**2 - A * np.cos(2 * math.pi * x_1)))+
              (x_2 ** 2 - A * np.cos(2 * math.pi * x_2)))
 
@@ -20,7 +20,7 @@ x_2 = np.linspace(-2, 6, 200)
 x_1, x_2 = np.meshgrid(x_1, x_2)
 y = rastrigin(x_1, x_2)
 
-
+'''
 x = np.concatenate((x_1, x_2), axis=1)
 #x = np.expand_dims(x, axis=1)
 y_mat = r['y_mat']
@@ -119,7 +119,7 @@ for iter_op in range(n_op_iter):
 
 
 
-'''
+
 n = len(target_list)
 for i in range(n):
     if i != 0:

@@ -50,7 +50,7 @@ init = tf.global_variables_initializer()
 sess.run(init)
 
 n_iter = 5000
-plot_freq = 100
+plot_freq = 200
 
 n_draws = 50
 x_star_temp = np.linspace(x_min, x_max, n_f*10)
@@ -71,8 +71,9 @@ for iter in range(n_iter):
     # plotting
     if iter%plot_freq == 0:
         #y_star_mat = sess.run(predict_op['mu'])         # 'Mu' --> dim = [N_star, n_draws] --> [100, 50]
-        y_star_mat = sess.run(predict_op)
-        df_pred_list.append(y_star_mat)
+        #y_star_mat = sess.run(predict_op)
+        _, y_mu, y_sigma = sess.run(predict_op)
+        #df_pred_list.append(y_star_mat)
         print(a[1])
         #see_shape = sess.run(predict_op['size'])
         #print(see_shape)
@@ -80,11 +81,20 @@ for iter in range(n_iter):
         plt.scatter(x, y, marker='o', color='b', label='1', s=10, alpha=1)
         plt.scatter(x_f[1::2], y_f[1::2], marker='+', color='r', label='1', s=20, alpha=1)
         plt.plot(x_f, y_f, color='g', linestyle='--')
+        plt.plot(x_star, y_mu, 'b', linewidth=2)
+        mu_temp = np.squeeze(y_mu)
+        sigma_temp = np.squeeze(y_sigma)
+        #sigma_temp = np.reshape(y_sigma.T, [1, -1])
+        plt.fill_between(x_star_temp, mu_temp - sigma_temp, mu_temp + sigma_temp,
+            alpha=0.2, facecolor='#65c9f7', interpolate=True)
+        '''
         n_draws = y_star_mat.shape[1]
         for ii in range(n_draws):
             plt.plot(x_star, y_star_mat[:, ii], color='#539caf', linewidth=0.3)
             #plt.ylim((-2, 2))
             #print(y_star_mat[:,ii])
+        '''
+
         fig_name = 'Figures/experiment_1_iter_' + str(iter) + '.png'
         plt.savefig(fig_name)
 

@@ -8,7 +8,7 @@ from bayes_opt import BayesianOptimization
 
 
 def rastrigin(x_1, x_2):
-    A = 6
+    A = 3
     return -(A + ((x_1**2 - A * np.cos(2 * math.pi * x_1)))+
              (x_2 ** 2 - A * np.cos(2 * math.pi * x_2)))
 
@@ -28,11 +28,22 @@ Bo.maximize(init_points=10, n_iter=30)
 
 target_list = Bo.res['all']['values']
 para_list = Bo.res['all']['params']
+init_para = Bo.res['init']['params'][0]
+
+'''
+fig = plt.figure()
+con = plt.contourf(x_1, x_2, y, 10, cmap="PuBuGn")
+fig.colorbar(con)
+plt.scatter(init_para[:,0], init_para[:,1], marker='+', color='r', label='1', s=30, alpha=1)
+fig_name = 'Figures/Rastrigin_Bayesian_Op_init.png'
+plt.savefig(fig_name)
+'''
 
 n = len(target_list)
 for i in range(n):
     fig = plt.figure()
-    con = plt.contourf(x_1, x_2, y, 10, cmap="RdBu_r")
+    con = plt.contourf(x_1, x_2, y, 10, cmap="PuBuGn")
+
     fig.colorbar(con)
     if i != 0:
         x_1_p = []
@@ -40,10 +51,14 @@ for i in range(n):
         for item in para_list[0:i]:
             x_1_p.append(item['x_1'])
             x_2_p.append(item['x_2'])
-        plt.scatter(x_1_p, x_2_p, marker='o', color='lightblue', label='1', s=16, alpha=1)
-    plt.scatter(para_list[i]['x_1'], para_list[i]['x_2'], marker='+', color='yellow', label='1', s=40, alpha=1)
-    plt.xlim((bound_lo, bound_up))
-    plt.ylim((bound_lo, bound_up))
+        plt.scatter(init_para[:, 0], init_para[:, 1], marker='o', color='y', label='1', s=30, alpha=1)
+        plt.scatter(x_1_p, x_2_p, marker='o', color='orchid', label='1', s=30, alpha=1)
+        plt.scatter(para_list[i]['x_1'], para_list[i]['x_2'], marker='+', color='r', label='1', s=30, alpha=1)
+    else:
+        plt.scatter(init_para[:, 0], init_para[:, 1], marker='+', color='r', label='1', s=30, alpha=1)
+        plt.scatter(para_list[i]['x_1'], para_list[i]['x_2'], marker='o', color='hotpink', label='1', s=30, alpha=1)
+    plt.xlim((bound_lo-0.1, bound_up+0.1))
+    plt.ylim((bound_lo-0.1, bound_up+0.1))
     fig_name = 'Figures/Rastrigin_Bayesian_Op_iter_' + str(i) + '.png'
     plt.savefig(fig_name)
 

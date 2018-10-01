@@ -3,14 +3,47 @@ import pandas as pd
 import tensorflow as tf
 from sklearn import preprocessing
 
-
+'''
 batch_size = 2
-num_total_points = 3
+num_total_points = 7
+num_target = 4
+num_context = 3
 x_size = 1
 y_size = 1
 l1_scale = 0.4
 sigma_scale = 1.0
-sigma_noise=2e-2
+sigma_noise = 2e-2
+
+
+#x_values = tf.random_uniform([5, ], -2, 2)
+x = np.random.uniform(-2, 2, size=[num_total_points, 1])
+#x = np.random.randint(2, 8, size=[num_total_points, 1])
+
+xdata1 = tf.constant(x, tf.float32)
+xdata2 = tf.constant(x.T, tf.float32)
+diff = xdata1 - xdata2
+noise = (sigma_noise ** 2) * tf.eye(num_total_points)
+norm = tf.square(diff + noise)
+kernel = tf.exp(-0.5 * norm)
+#kernel = tf.square(diff)
+Cholesky = tf.cast(tf.cholesky(tf.cast(kernel, tf.float64)), tf.float32)
+y_values = tf.matmul(Cholesky, tf.random_normal([num_total_points, 1]))
+
+sess = tf.Session()
+print(x)
+print(sess.run(xdata1))
+print(sess.run(xdata2))
+print(sess.run(diff))
+print(sess.run(noise))
+print(sess.run(norm))
+print(sess.run(kernel))
+print(sess.run(Cholesky))
+print(sess.run(y_values))
+
+idx = tf.random_shuffle(tf.range(num_target))
+context_x = tf.gather(x, idx[:num_context], axis=0)
+print(sess.run(idx))
+print(sess.run(context_x))
 
 sigma_f = tf.ones(shape=[batch_size, y_size]) * sigma_scale
 
@@ -36,5 +69,9 @@ print(sess.run(diff))
 print(sess.run(norm))
 print(sess.run(noise))
 print(sess.run(kernel))
+'''
+output_sizes = [128, 128, 128, 128]
+for i, size in enumerate(output_sizes[:-1]):
+    print(i, size)
 
 
