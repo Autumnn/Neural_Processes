@@ -108,7 +108,8 @@ class NeuralProcess:
 
         # the source of randomness can be optionally passed as an argument
         if epsilon is None:
-            epsilon = tf.random_normal(shape=(n_draws, self.dim_z))
+            #epsilon = tf.random_normal(shape=(n_draws, self.dim_r))
+            epsilon = tf.random_normal(shape=(n_draws, 1))
 
         # predictions
         y_params = self.g(r_params, x_star)

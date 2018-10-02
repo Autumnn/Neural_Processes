@@ -70,8 +70,18 @@ print(sess.run(norm))
 print(sess.run(noise))
 print(sess.run(kernel))
 '''
-output_sizes = [128, 128, 128, 128]
-for i, size in enumerate(output_sizes[:-1]):
-    print(i, size)
+
+
+x = np.random.normal(0,1,20)
+print(x)
+
+ind = np.argpartition(x, -10)
+print(ind)
+
+s = ind[-10:]
+print(s)
+
+x_s = x[s]
+print(x_s)
 
 
