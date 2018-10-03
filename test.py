@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import pandas as pd
 import tensorflow as tf
 from sklearn import preprocessing
@@ -72,16 +73,19 @@ print(sess.run(kernel))
 '''
 
 
-x = np.random.normal(0,1,20)
-print(x)
-
-ind = np.argpartition(x, -10)
-print(ind)
-
-s = ind[-10:]
-print(s)
-
-x_s = x[s]
-print(x_s)
+def rastrigin(x_1, x_2):
+    A = 3
+    return -(A + ((x_1**2 - A * np.cos(2 * math.pi * x_1)))+
+             (x_2 ** 2 - A * np.cos(2 * math.pi * x_2)))
 
 
+a = np.array([[1,3],[2,4]])
+b = np.array([[0,2],[1,3],[6,4]])
+
+x, idx = np.unique(np.concatenate((a, b), axis=0), axis=0, return_index=True)
+idx = idx - 2
+
+print(x, idx)
+
+idx = np.delete(idx, np.where(idx<0))
+print(idx)

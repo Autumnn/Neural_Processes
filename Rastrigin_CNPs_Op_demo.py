@@ -76,7 +76,8 @@ train_op_and_loss = neural_process.init_NP(learning_rate = 0.001)
 init = tf.global_variables_initializer()
 sess.run(init)
 
-n_iter = 1001
+n_iter = 10001
+plot_freq = 1000
 x_1_t = np.reshape(x_1, (-1,1))
 x_2_t = np.reshape(x_2, (-1,1))
 x_star = np.concatenate((x_1_t, x_2_t), axis=1)
@@ -94,7 +95,7 @@ for iter in range(n_iter):
     feed_dict = neural_process.helper_context_and_target(x_init, y_init, N_context, x_context, y_context, x_target, y_target)
     # optimisation step
     a = sess.run(train_op_and_loss, feed_dict= feed_dict)
-    if iter % 100 == 0:
+    if iter % plot_freq == 0:
         print(a[1])
         _, y_star_mu, y_star_sigma = sess.run(predict_op)
         y_mu_t = np.reshape(y_star_mu, (num_star, -1))
@@ -174,7 +175,7 @@ for iter_op in range(n_op_iter):
                                                              y_target)
         # optimisation step
         a = sess.run(train_op_and_loss, feed_dict=feed_dict)
-        if iter % 100 == 0:
+        if iter % plot_freq == 0:
             print(a[1])
             _, y_star_mu, y_star_sigma = sess.run(predict_op)
             y_mu_t = np.reshape(y_star_mu, (num_star, -1))

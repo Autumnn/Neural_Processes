@@ -25,7 +25,7 @@ bound_lo = np.min(x_1)
 bound_up = np.max(x_1)
 
 Bo = BayesianOptimization(rastrigin, {'x_1': (bound_lo, bound_up), 'x_2': (bound_lo, bound_up)})
-Bo.maximize(init_points=60, n_iter=30)
+Bo.maximize(init_points=40, n_iter=30)
 
 target_list = Bo.res['all']['values']       # list --> [value_1, value_2, ..., value_n]
 para_list = Bo.res['all']['params']         # list --> [{'x_1': , 'x_2':}, {'x_1': , 'x_2': }, ... , {'x_1': , 'x_2': }]
